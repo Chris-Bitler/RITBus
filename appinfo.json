@@ -10,7 +10,6 @@
         "media": [
             {
                 "file": "images/menu_icon.png",
-                "menuIcon": true,
                 "name": "IMAGE_MENU_ICON",
                 "type": "bitmap"
             },
@@ -28,6 +27,12 @@
                 "file": "fonts/UbuntuMono-Regular.ttf",
                 "name": "MONO_FONT_14",
                 "type": "font"
+            },
+            {
+                "file": "images/Bus28",
+                "menuIcon": true,
+                "name": "IMAGES_BUS28",
+                "type": "png"
             }
         ]
     },
@@ -39,7 +44,7 @@
     ],
     "uuid": "54e91050-edfb-4133-bf3d-94a8a7317459",
     "versionCode": 1,
-    "versionLabel": "1.0",
+    "versionLabel": "1.1",
     "watchapp": {
         "hiddenApp": false,
         "watchface": false

@@ -42,10 +42,8 @@ ajax(
     type:'json'
   },
   function(data) {
-    //console.log("test1");
     for(var i = 0; i < data.data.length; i++) {
       var stop = data.data[i];
-      //console.log(stop.stop_id);
       stops[stop.stop_id] = stop;
     }
   },
@@ -64,13 +62,15 @@ ajax(
   function(data) {
     for(var i = 0; i < data.data[643].length; i++) {
       var route = data.data[643][i];
-    //  console.log(route.long_name + "," + route.route_id + "," + route.stops);
-      routes[route.route_id] = route;
+      if(route.is_active && route.long_name !== "AV ROUTE") {
+        routes[route.route_id] = route;
+      }
     }
     var items = [];
     routes.forEach(function(element, index, array) {
       items.push({title: routes[index].long_name});
     });
+    items.push({title: "Refresh"});
     createMenu(items);
   },
   function(error) {
@@ -90,11 +90,34 @@ function getRouteByName(title) {
   return route;
 }
 
+function refreshRouteData() {
+  console.log("Derp");
+  ajax(
+  {
+    url:'https://transloc-api-1-2.p.mashape.com/routes.json?agencies=643&callback=call',
+    headers: {"X-Mashape-Key" : "vuDPS5EJPVmshPRON0u2wZK9Rqdap1Asa8sjsn3GevvSArSsaj"},
+    type:'json'
+  },
+  function(data) {
+    for(var i = 0; i < data.data[643].length; i++) {
+      var route = data.data[643][i];
+      if(route.is_active && route.long_name !== "AV ROUTE") {
+        routes[route.route_id] = route;
+      }
+    }
+  },
+  function(error) {
+    console.log('Download failed: ' + error);
+  }
+  );
+}
+
 function createMenu(items) {
   mainMenu = new UI.Menu({
       sections: [{
         title: 'Bus Routes',
-        items: items
+        items: items,
+        fullscreen: true
       }]
     });
     mainMenu.on('select', routeSelect);
@@ -107,7 +130,8 @@ function createMenu2(route, items, stopRef) {
   menu2 = new UI.Menu({
       sections: [{
         title: 'Bus Stops - ' + route.long_name,
-        items: items
+        items: items,
+        fullscreen: true
       }]
     });
     curRouteStop = route;
@@ -123,19 +147,30 @@ function createMenu2(route, items, stopRef) {
 }
 
 function routeSelect(e) {
-  var route = getRouteByName(e.item.title);
-  if(route !== undefined) {
-    var items = [];
-    var stopRef = [];
-    var i = 0;
-    route.stops.forEach(function(element, index, array) {
-      if(stops[route.stops[index]] !== undefined) {
-        items.push({title: stops[route.stops[index]].name});
-        stopRef[i] = route.stops[index];
-        i++;
-      }
+  if(e.item.title !== "Refresh") {
+    var route = getRouteByName(e.item.title);
+    if(route !== undefined) {
+      var items = [];
+      var stopRef = [];
+      var i = 0;
+      route.stops.forEach(function(element, index, array) {
+        if(stops[route.stops[index]] !== undefined) {
+          items.push({title: stops[route.stops[index]].name});
+          stopRef[i] = route.stops[index];
+          i++;
+        }
+      });
+      createMenu2(route,items,stopRef);
+    }
+  }else{
+    refreshRouteData();
+    var it = [];
+    routes.forEach(function(element, index, array) {
+      it.push({title: routes[index].long_name});
     });
-    createMenu2(route,items,stopRef);
+    it.push({title: "Refresh"});
+    mainMenu.items(0,it);
+    console.log("Derp");
   }
 }
 
@@ -158,7 +193,6 @@ function showStop(rid,stop) {
         var min = Math.floor((diff/1000)/60);
           stopData = new UI.Card({
             scrollable: true,
-            //title: curRouteStop.long_name,
             subtitle: "Stop: " + stop.name,
             body: "Arriving in approximately " + min + " minutes! Shake to refresh.",
           });
@@ -195,7 +229,7 @@ function showStop(rid,stop) {
           });
       }else{
         stopData = new UI.Card({
-          //title: curRouteStop.long_name,
+          scrollable: true,
           subtitle: "Stop: " + stop.name,
           body: "No data! This probably means the bus isn't coming again for a while."
         });
@@ -203,7 +237,7 @@ function showStop(rid,stop) {
       }
     }else{
       stopData = new UI.Card({
-          title: curRouteStop.long_name,
+          scrollable: true,
           subtitle: "Stop:" + stop.name,
           body: "No data! This probably means the bus isn't coming again for a while."
         });
